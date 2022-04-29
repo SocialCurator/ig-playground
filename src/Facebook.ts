@@ -8,16 +8,46 @@ const initFacebookSdk = () => {
                 xfbml: true,
                 version: 'v8.0',
             })
-
-            // auto authenticate with the api if already logged in with facebook
-            window.FB.getLoginStatus(({ authResponse }) => {
-                if (authResponse) {
-                    console.log(`i guess i'm logged in`)
-                } else {
-                    console.log(`maybe I'm not logged in`)
-                }
-            })
         }
+
+        window.FB.getLoginStatus((res) => {
+            // statusChangeCallback(response)
+
+            if (res.status === 'connected') {
+                console.log(`i guess i'm logged in`)
+                // The user is logged in and has authenticated our
+                // app, and response.authResponse supplies
+                // the user's ID, a valid access token, a signed
+                // request, and the time the access token 
+                // and signed request each expire.
+
+                // response looks like this
+                // {
+                //     status: 'connected',
+                //     authResponse: {
+                //         accessToken: '...',
+                //         expiresIn:'...',
+                //         signedRequest:'...',
+                //         userID:'...'
+                //     }
+                // }
+
+                var uid = res.authResponse.userID;
+                var accessToken = res.authResponse.accessToken;
+                console.log('uid', uid)
+                console.log('accessToken', accessToken)
+              } else if (res.status === 'not_authorized') {
+                console.log(`I'm logged in but not authorized`)
+                // The user hasn't authorized our application.  They
+                // must click the Login button, or you must call FB.login
+                // in response to a user gesture, to launch a login dialog.
+              } else {
+                console.log(`maybe I'm not logged in`)
+                // The user isn't logged in to Facebook. You can launch a
+                // login dialog with a user gesture, but the user may have
+                // to log in to Facebook before authorizing our application.
+              }
+        })  
     })
 }
 
