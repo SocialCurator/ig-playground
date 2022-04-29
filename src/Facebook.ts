@@ -47,7 +47,10 @@ const initFacebookSdk = () => {
                 // login dialog with a user gesture, but the user may have
                 // to log in to Facebook before authorizing our application.
               }
-        })  
+        // true -> refreshes cache of response object in the case that user
+        // logs out of facebook or our app was removed from their settings
+        // be careful about performance, should only run on initial page load
+        }, true)  
     })
 }
 
