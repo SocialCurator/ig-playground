@@ -4,23 +4,28 @@ import initFacebookSdk from './Facebook';
 
 const App = () => {
     const loginWithFacebook = async () => {
-        const accessToken = `rwrlkjl3kjr3lkjr2lkjlfwkjflkjflskjfdslkfjds`
-        const res = await fetch(`/api/authorize`, {
-            method: 'POST',
-            body: accessToken,
-        })
-        console.log(await res.json())
-
-        //https://developers.facebook.com/docs/facebook-login/web/
-        /*
-        window.FB.login( ({ authResponse }) => {
+          //https://developers.facebook.com/docs/facebook-login/web/
+          window.FB.login( ({ authResponse }) => {
             if (authResponse) {
                 console.log(authResponse)
+
+                try {
+                    const res = fetch(`/api/authorize`, {
+                        method: 'POST',
+                        body: authResponse.accessToken,
+                    }).then(()=>{
+
+                    })
+                }
+                catch (err) {
+                    console.log(err)
+                }
+      
             } else {
                 console.log(`no auth response`)
             }
         })
-        */
+        // console.log(await res.json())
     }
 
     // on page load, auto authenticate with the api if already logged in with facebook
