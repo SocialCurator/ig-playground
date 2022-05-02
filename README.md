@@ -1,5 +1,9 @@
 # steps taken
 
+Monday May 2nd, 2022
+- [ ] adding the nodejs library `yarn add facebook-nodejs-business-sdk` https://github.com/facebook/facebook-nodejs-business-sdk
+
+Friday April 29th, 2022
 -   [ ] added "@types/facebook-js-sdk": "^3.3.5", to dependencies \
 -   [ ] added the default JS to index.html \
 
