@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom'
+import initFacebookSdk from './Facebook';
 
 const App = () => {
     const loginWithFacebook = async () => {
@@ -11,7 +13,7 @@ const App = () => {
 
         //https://developers.facebook.com/docs/facebook-login/web/
         /*
-        window.FB.login(async ({ authResponse }) => {
+        window.FB.login( ({ authResponse }) => {
             if (authResponse) {
                 console.log(authResponse)
             } else {
@@ -20,6 +22,11 @@ const App = () => {
         })
         */
     }
+
+    // on page load, auto authenticate with the api if already logged in with facebook
+    useEffect(()=>{
+       initFacebookSdk()
+    },[])
 
     return (
         <>
