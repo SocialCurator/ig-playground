@@ -5,6 +5,9 @@
 /.pnp
 .pnp.js
 
+# localhost cert
+/server/localhost
+
 # testing
 /coverage
 
