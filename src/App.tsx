@@ -4,7 +4,7 @@ import useFacebook from './useFacebook';
 
 const App = () => {
 
-    const { user, loggedIn, actions: { initFacebookSdk, checkLoginState, loginWithFacebook, logoutWithFacebook } } = useFacebook()
+    const { user, loggedIn, actions: { initFacebookSdk, loginWithFacebook, logoutWithFacebook } } = useFacebook()
 
     // init Facebook Sdk on page load
     useEffect(()=>{
@@ -17,11 +17,19 @@ const App = () => {
             <br /><br />
             <div>Hello World</div>
             <br />
+            <br />
             {!loggedIn && (
-                <button onClick={loginWithFacebook}>Login with Facebook</button>
+                <>
+                <h3>Connect your Facebook Account</h3>
+                <button onClick={loginWithFacebook}>Log in with Facebook</button>
+                </>
             )}
-            {loggedIn && (
-                <button onClick={logoutWithFacebook}>Logout of Facebook</button>
+            {loggedIn && user && (
+                <>
+                <h3>Welcome, {user.facebook?.first_name}</h3>
+                <img src={user.facebook?.picture?.data.url} />
+                <button onClick={logoutWithFacebook}>Log out of Facebook</button>
+                </>
             )}
         </>
     )
