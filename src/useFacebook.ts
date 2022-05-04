@@ -1,9 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useState } from 'react';
+
+type AccountInfo = {
+  name?: string,
+  first_name?: string,
+  picture?: {
+    data: {
+        height: number,
+        is_silhouette: boolean,
+        url: string,
+        width: number
+    }
+}
+}
+
+type UserData = {
+  userId?: string,
+  facebook?: AccountInfo,
+  instagram?: AccountInfo
+}
 
 const useFacebook = () => {
 
-  // ? this would be stored in UserContext
-  const [user, setUser] = useState({})
+  const [user, setUser] = useState<UserData>({userId: '1234'})
   const [loggedIn, setLoggedIn] = useState(false)
 
   // asynchronously load SDK into app
@@ -17,101 +36,113 @@ const useFacebook = () => {
                 xfbml: true,
                 version: 'v8.0',
             })
-
-            checkLoginState()
         }
     })
-  }
+  } 
 
-// check user's log in status
-// calling this when on landing pages is recommended
-const checkLoginState = () => {
-  window.FB.getLoginStatus((res) => {
-    // statusChangeCallback(res)
+  const loginWithFacebook = async () => {
+    //https://developers.facebook.com/docs/facebook-login/web/
+    window.FB.login( ({ authResponse }) => {
 
-    // response object
-    //   {
-    //     status: 'connected',
-    //     authResponse: {
-    //         accessToken: '...',
-    //         expiresIn:'...',
-    //         signedRequest:'...',
-    //         userID:'...'
-    //     }
-    // }
-
-    if (res.status === 'connected') {
-        console.log(`i guess i'm logged in`)
-
+      if (authResponse) {
         setLoggedIn(true)
-
-        var uid = res.authResponse.userID;
-        var accessToken = res.authResponse.accessToken;
-
-        // redirect to app's logged in experience
-
-      } else {
-        console.log(`maybe I'm not logged in`)
-
-        setLoggedIn(false)
-
-        // prompt to log in OR show log in button
-      }
-  // true -> refreshes cache of response object in the case that user
-  // logs out of facebook or our app was removed from their settings
-  // be careful about performance, should only run on initial page load
-  }, true)  
-}
-
-const loginWithFacebook = async () => {
-  //https://developers.facebook.com/docs/facebook-login/web/
-  window.FB.login( ({ authResponse }) => {
-    if (authResponse) {
         console.log('auth response:', authResponse)
 
-        setLoggedIn(true)
+        const storeToken = axios.post('/authorize', {
+          authResponse
+        })
+        const getProfile = axios.get<AccountInfo>('/getprofile')
+         
+        try { 
+          axios.all([storeToken, getProfile]).then(axios.spread((...responses)=>{
+           const fbProfile: AccountInfo = responses[1].data
 
-        try {
-            fetch(`/api/authorize`, {
-                method: 'POST',
-                body: authResponse.accessToken,
-            }).then((res)=>{
-              console.log(res)
-            })
+           console.log('fbprofile', fbProfile)
+
+           setUser({...user, facebook: fbProfile })
+          })).catch(err => {
+            console.log(err)
+          })
         }
         catch (err) {
-            console.log(err)
-        }
+              console.log('you are here',err)
+        }    
+      } else {
+          return console.log(`no auth response: user cancelled login or did not fully authorize`)
+      }
+      // TODO ask for additional permissions
+    }, {scope: 'public_profile'})
+  }
 
-    } else {
-        console.log(`no auth response: user cancelled login or did not fully authorize`)
-    }
-    // TODO ask for additional permissions
-}, {scope: 'public_profile'})
-// console.log(await res.json())
-}
+  const logoutWithFacebook = async () => {
+    window.FB.logout((res) => {
+      if (res.status === 'unknown') {
+        console.log('user is now logged out')
+        setLoggedIn(false)
+      } else {
+        alert('log out failed')
+      }
+    });
+  }
 
-const logoutWithFacebook = async () => {
-  window.FB.logout((res) => {
-    if (res.status === 'unknown') {
-      console.log('user is now logged out')
-      setLoggedIn(false)
-    } else {
-      alert('log out failed')
-    }
- });
-}
+  const getToken = async() => {
+    const token = await (await axios.get('/token')).data
+    console.log(token)
+    return token
+  }
 
   return {
     user,
     loggedIn,
     actions: {
       initFacebookSdk,
-      checkLoginState,
       loginWithFacebook,
-      logoutWithFacebook
+      logoutWithFacebook,
+      getToken
     }
   }
 }
 
 export default useFacebook
+
+
+// const statusChangeCallback = (res: fb.StatusResponse) => {
+//     console.log('checkLoginState res', res);
+
+//     if (res.status === 'connected') {
+//       console.log(`i guess i'm logged in`)
+//       console.log('logged into facebook and into webpage')
+
+//       setLoggedIn(true)
+
+//       var uid = res.authResponse.userID;
+//       var accessToken = res.authResponse.accessToken;
+
+//       // redirect to app's logged in experience
+
+//       // console.log('Welcome!  Fetching your information.... ');
+//       // FB.api('/me', function(response) {
+//       //   console.log('Successful login for: ' + response.name);
+//       //   document.getElementById('status').innerHTML =
+//       //     'Thanks for logging in, ' + response.name + '!';
+//       // });
+
+//     } else if (res.status === 'not_authorized') {
+//       console.log('logged into facebook but not webpage')
+//     }
+//     else {
+//       console.log(`maybe I'm not logged in`)
+//       console.log('not logged into facebook')
+
+//       setLoggedIn(false)
+
+//       // prompt to log in OR show log in button
+//     }
+// }
+
+// check user's log in status
+// const checkLoginState = () => {
+//   window.FB.getLoginStatus((res) => {
+//     statusChangeCallback(res)
+// }, true) // true: refreshes cache of response object in the case that user logs out of facebook or our app was removed from their settings be careful about performance, should only run on initial page load
+// }           
