@@ -1,5 +1,9 @@
 # steps taken
 
+Tuesday May 3rd, 2022
+- [ ] removed nodejs library `yarn add facebook-nodejs-business-sdk` https://github.com/facebook/facebook-nodejs-business-sdk
+- [ ] removed `body-parser`, it is now built into express
+
 Monday May 2nd, 2022
 - [ ] adding the nodejs library `yarn add facebook-nodejs-business-sdk` https://github.com/facebook/facebook-nodejs-business-sdk
 
