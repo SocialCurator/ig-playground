@@ -109,10 +109,10 @@ app.post('/authorize', (req, res) => __awaiter(void 0, void 0, void 0, function*
         accessToken,
         userID
     };
-    // get user's profile
-    const profile = yield getProfile(accessToken);
-    // get user's page info
-    const pageInfo = yield getPageInfo(accessToken);
+    // get user's profile & page info
+    const result = yield Promise.all([getProfile(accessToken), getPageInfo(accessToken)]);
+    const profile = result[0];
+    const pageInfo = result[1];
     // set user data
     user.facebook = Object.assign(Object.assign({}, user.facebook), { auth, profile, pages: pageInfo });
     console.log("User's data has been stored in the server.");

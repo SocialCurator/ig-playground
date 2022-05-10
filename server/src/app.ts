@@ -20,6 +20,9 @@ app.use(express.json())
 
 let user: UserData = {userID: 'social-curator-id'}
 
+// TODO check if valid authentication for each account
+// TODO refresh token for security?
+
 // TODO store data for multiple FB + IG accounts
 type UserData = {
     userID?: string,
@@ -156,12 +159,11 @@ app.post('/authorize', async (req, res) => {
         userID
     }
 
-    // get user's profile
-    const profile = await getProfile(accessToken)
-
-    // get user's page info
-    const pageInfo = await getPageInfo(accessToken)
-
+    // get user's profile & page info
+    const result = await Promise.all([getProfile(accessToken), getPageInfo(accessToken)])
+    const profile = result[0]
+    const pageInfo = result[1]
+        
     // set user data
     user.facebook = {...user.facebook, auth, profile, pages: pageInfo}
 
