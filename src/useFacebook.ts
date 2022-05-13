@@ -2,26 +2,23 @@ import axios from 'axios';
 import { useEffect, useState } from 'react';
 
 type UserData = {
-  userId?: string,
+  id?: string,
   facebook?: AccountInfo,
   instagram?: AccountInfo
 }
 
 type AccountInfo = {
-  name?: string,
-  first_name?: string,
-  picture?: {
-    data: {
-        height: number,
-        is_silhouette: boolean,
-        url: string,
-        width: number
-    }
-}
+  profile: {
+    name: string,
+    firstName?: string,
+    url: string,
+  },
+  pages?: AccountInfo[]
 }
 
 const useFacebook = () => {
-  const [user, setUser] = useState<UserData>({userId: '1234'})
+
+  const [user, setUser] = useState<UserData>({id: '1234'})
   const [loggedIn, setLoggedIn] = useState(false)
   const [isInitialized, setIsInitialized] = useState(false)
 
@@ -42,7 +39,7 @@ const useFacebook = () => {
     })
   } 
 
-  const loginWithFacebook = async () => {
+  const connectToFacebook = async () => {
     //https://developers.facebook.com/docs/facebook-login/web/
     window.FB.login( ({ authResponse }) => {
 
@@ -50,15 +47,17 @@ const useFacebook = () => {
         setLoggedIn(true)
          
         try { 
-          axios.post('/authorize', {
-            authResponse
+          axios.post('/authorization', {
+            authResponse,
+            type: 'facebook'
           }).then((res)=>{
-            console.log(res.data)
-            setUser({...user, facebook: res.data} )
+            console.log("User's data has been stored in the server.")
+            console.log('res', res.data)
+            setUser({...user, facebook: {...user.facebook, profile: res.data.profile, pages: res.data.pageInfo}} )
           })
         }
         catch (err) {
-          console.log('you are here',err)
+          console.log('you are here', err)
         }    
       } else {
           return console.log(`no auth response: user cancelled login or did not fully authorize`)
@@ -70,16 +69,48 @@ const useFacebook = () => {
     })
   }
 
+  const connectToInstagram = async () => {
+    window.FB.login( ({ authResponse }) => {
+
+      if (authResponse) {
+        setLoggedIn(true)
+         
+        try { 
+          axios.post('/authorization', {
+            authResponse,
+            type: 'instagram'
+          }).then((res)=>{
+            console.log(res.data)
+            setUser({...user, instagram: {...user.instagram, profile: res.data.profile, pages: res.data.pageInfo}} )
+          })
+        }
+        catch (err) {
+          console.log('you are here here', err)
+        }    
+      } else {
+          return console.log(`no auth response: user cancelled login or did not fully authorize`)
+      }
+    }, {
+      scope: 'instagram_basic,instagram_content_publish',
+      return_scopes: true,
+      enable_profile_selector: true
+    })
+  }
+
   const logoutWithFacebook = async () => {
     window.FB.logout((res) => {
       if (res.status === 'unknown') {
         console.log('user is now logged out')
         setLoggedIn(false)
+        // TODO
+        // remove facebook in state
       } else {
         alert('log out failed')
       }
     });
   }
+
+  // const logoutWith Instagram = async () => {}
 
   const postToFacebook = async () => {
     // TODO captions with special characters + white space?
@@ -87,7 +118,7 @@ const useFacebook = () => {
     const imageUrl = 'https://www.seekpng.com/png/detail/3-39494_vector-cloud-png-white-clouds-vector-png.png'
 
     try {
-      const res = await axios.post('/post', {message, imageUrl})
+      const res = await axios.post('/facebook/publish', {message, imageUrl})
       console.log(res.data)
     }
     catch(err) {
@@ -95,7 +126,21 @@ const useFacebook = () => {
     }
   }
 
-  // for testing only
+  const postToInstagram = async () => {
+
+    const caption = 'testing ig wooooo'
+    const imageUrl = 'https://mlpxhq8ztvyc.i.optimole.com/QgmSm9c.1pLW~44a4f/w:350/h:350/q:100/https://thrivethemes.com/wp-content/uploads/2018/05/photo-jpeg-example.jpg'
+
+    try {
+      const res = await axios.post('/instagram/publish', {caption, imageUrl})
+      console.log(res.data)
+    }
+    catch (err) {
+      console.log(err)
+    }
+  }
+
+  // ----- for testing only -----
   const getUserData = async () => {
     try {
       const res = await axios.get('/user')
@@ -107,44 +152,46 @@ const useFacebook = () => {
   }
 
   // once sdk is initialized, check if user is logged in
-  useEffect(()=>{
-    if (isInitialized) {
-      window.FB.getLoginStatus((res) => {
-        console.log(res)
+  // useEffect(()=>{
+  //   if (isInitialized) {
+  //     window.FB.getLoginStatus((res) => {
+  //       console.log(res)
 
-        // user is logged in
-        if (res.status === 'connected') {
-          setLoggedIn(true)
-          const authResponse = res.authResponse
+  //       // user is logged in
+  //       if (res.status === 'connected') {
+  //         setLoggedIn(true)
+  //         const authResponse = res.authResponse
 
-          try { 
-            axios.post('/authorize', {
-              authResponse
-            }).then((res)=>{
-              console.log(res.data)
-              setUser({...user, facebook: res.data} )
-            })
-          }
-          catch (err) {
-            console.log('you are here',err)
-          }    
-        }
-        // user is not logged in
-        else {
-          setLoggedIn(false)
-        }
-      }, true); // true: refreshes cache of response object in the case that user logs out of facebook or our app was removed from their settings be careful about performance, should only run on initial page load
-    }
-  }, [isInitialized])
+  //         try { 
+  //           axios.post('/authorize', {
+  //             authResponse
+  //           }).then((res)=>{
+  //             console.log(res.data)
+  //             setUser({...user, facebook: res.data} )
+  //           })
+  //         }
+  //         catch (err) {
+  //           console.log('you are here',err)
+  //         }    
+  //       }
+  //       // user is not logged in
+  //       else {
+  //         setLoggedIn(false)
+  //       }
+  //     }, true); // true: refreshes cache of response object in the case that user logs out of facebook or our app was removed from their settings be careful about performance, should only run on initial page load
+  //   }
+  // }, [isInitialized])
 
   return {
     user,
     loggedIn,
     actions: {
       initFacebookSdk,
-      loginWithFacebook,
+      connectToFacebook,
+      connectToInstagram,
       logoutWithFacebook,
       postToFacebook,
+      postToInstagram,
       getUserData
     }
   }
