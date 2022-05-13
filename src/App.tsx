@@ -9,9 +9,11 @@ const App = () => {
         loggedIn,
         actions: {
             initFacebookSdk,
-            loginWithFacebook,
+            connectToFacebook,
+            connectToInstagram,
             logoutWithFacebook,
             postToFacebook,
+            postToInstagram,
             getUserData }
         } = useFacebook()
 
@@ -44,21 +46,49 @@ const App = () => {
                     It looks like you have no connected business account.
                 </div>
             )}
-            {loggedIn && user && (
+            {loggedIn && user.facebook?.pages && (
                 <>
-                <img src={user.facebook?.picture?.data.url} /><span>@{user.facebook?.first_name}</span>
-                <button onClick={logoutWithFacebook}>Disconnect</button>
-                <button onClick={postToFacebook}>Post</button>
+                {
+                    user.facebook.pages.map((page)=>{
+
+                        return (
+                            <>
+                                <img src={page.profile.url} /><span>@{page.profile.name}</span>
+                                {/* //TODO logout/disconnect from each individual account (or page?) */}
+                                <button onClick={logoutWithFacebook}>Disconnect</button>
+                                <button onClick={postToInstagram}>Post</button>
+                                <br />
+                            </>
+                        )
+                    })
+                }
+                </>
+            )}
+            {loggedIn && user.instagram?.pages && (
+                <>
+                    {
+                        user.instagram.pages.map((page)=>{
+                            return (
+                                <>
+                                    <img src={page.profile.url} /><span>@{page.profile.name}</span>
+                                    {/* //TODO logout/disconnect from each individual account */}
+                                    <button onClick={logoutWithFacebook}>Disconnect</button>
+                                    <button onClick={postToInstagram}>Post</button>
+                                    <br />
+                                </>
+                            )
+                        })
+                    }
                 </>
             )}
                 <h3>Add Channels</h3>
-                <button onClick={loginWithFacebook}>Connect your Facebook Account</button>
+                <button onClick={connectToFacebook}>Connect your Facebook Account</button>
                 <br />
                 <br />
-                // TODO auth process for IG
-                <button disabled>Connect your Instagram Account</button>
+                <button onClick={connectToInstagram}>Connect your Instagram Account</button>
         </div>
     )
 }
 
 export default App
+  
