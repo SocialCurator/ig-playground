@@ -10,11 +10,11 @@ const App = () => {
         actions: {
             initFacebookSdk,
             connectToFacebook,
-            connectToInstagram,
             logoutWithFacebook,
             postToFacebook,
             postToInstagram,
-            getUserData }
+            getUserDataBE,
+            getUserDataFE }
         } = useFacebook()
 
     // init Facebook Sdk on page load
@@ -38,7 +38,8 @@ const App = () => {
             <Link to="/other">Other</Link>
             <br />
             <br />
-            <button onClick={getUserData}>Get User Data</button>
+            <button onClick={getUserDataBE}>Get User Data BE</button><button onClick={getUserDataFE}>Get User Data FE</button>
+
             <br />
             <h3>Connected Accounts</h3>
             {!loggedIn &&(
@@ -52,13 +53,12 @@ const App = () => {
                     user.facebook.pages.map((page)=>{
 
                         return (
-                            <>
-                                <img src={page.profile.url} /><span>@{page.profile.name}</span>
-                                {/* //TODO logout/disconnect from each individual account (or page?) */}
+                            <div key={page.id}>
+                                <img src={page.profile?.url} /><span>@{page.profile?.name}</span>
                                 <button onClick={logoutWithFacebook}>Disconnect</button>
-                                <button onClick={postToInstagram}>Post</button>
+                                <button onClick={()=>postToFacebook(page.id)}>Post</button>
                                 <br />
-                            </>
+                            </div>
                         )
                     })
                 }
@@ -69,13 +69,12 @@ const App = () => {
                     {
                         user.instagram.pages.map((page)=>{
                             return (
-                                <>
-                                    <img src={page.profile.url} /><span>@{page.profile.name}</span>
-                                    {/* //TODO logout/disconnect from each individual account */}
+                                <div key={page.id}>
+                                    <img src={page.profile?.url} /><span>@{page.profile?.username}</span>
                                     <button onClick={logoutWithFacebook}>Disconnect</button>
-                                    <button onClick={postToInstagram}>Post</button>
+                                    <button onClick={()=>postToInstagram(page.id)}>Post</button>
                                     <br />
-                                </>
+                                </div>
                             )
                         })
                     }
@@ -85,7 +84,7 @@ const App = () => {
                 <button onClick={connectToFacebook}>Connect your Facebook Account</button>
                 <br />
                 <br />
-                <button onClick={connectToInstagram}>Connect your Instagram Account</button>
+                <button onClick={connectToFacebook}>Connect your Instagram Account</button>
         </div>
     )
 }
