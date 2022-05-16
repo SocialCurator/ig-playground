@@ -28,8 +28,8 @@ app.use(express_1.default.urlencoded({ extended: true }));
 app.use(express_1.default.json());
 let user = { id: 'social-curator-id' };
 //------- functions
-// get user's profile
-const getProfile = (token) => __awaiter(void 0, void 0, void 0, function* () {
+// get user's facebook account profile
+const getFacebookProfile = (token) => __awaiter(void 0, void 0, void 0, function* () {
     const url = `https://graph.facebook.com/v13.0/me?fields=id,name,first_name,picture&access_token=${token}`;
     try {
         const { data } = yield (0, axios_1.default)({
@@ -48,14 +48,16 @@ const getProfile = (token) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 // get data about pages that user authorized access to
-// ? Note that in some cases the app User may grant your app access to more than one Page, in which case you should capture each Page ID and its respective token, and provide a way for the app User to target each of those Pages.
-const getPageInfo = (token) => __awaiter(void 0, void 0, void 0, function* () {
+const getFacebookPages = (token) => __awaiter(void 0, void 0, void 0, function* () {
     const url = `https://graph.facebook.com/v13.0/me/accounts?fields=picture,name,access_token&access_token=${token}`;
     try {
         const { data } = yield (0, axios_1.default)({
             method: 'get',
             url
         });
+        if (!data) {
+            return;
+        }
         const pagesInfo = data.data;
         const pages = [];
         pagesInfo.forEach((page) => {
@@ -77,6 +79,41 @@ const getPageInfo = (token) => __awaiter(void 0, void 0, void 0, function* () {
         console.log(err.message);
     }
 });
+const getInstagramId = (id, token) => __awaiter(void 0, void 0, void 0, function* () {
+    const url = `https://graph.facebook.com/v13.0/${id}?fields=instagram_business_account&access_token=${token}`;
+    try {
+        const { data } = yield (0, axios_1.default)({
+            method: 'get',
+            url
+        });
+        return data.instagram_business_account.id;
+    }
+    catch (err) {
+        console.log(err.message);
+    }
+});
+const getInstagramProfile = (id, token) => __awaiter(void 0, void 0, void 0, function* () {
+    const url = `https://graph.facebook.com/v13.0/${id}?fields=name,profile_picture_url,username&access_token=${token}`;
+    try {
+        const { data } = yield (0, axios_1.default)({
+            method: 'get',
+            url
+        });
+        // TODO - find better way to get user's ig profile picture
+        // const x  = await axios({
+        //     method: 'get',
+        //     url: `https://www.instagram.com/${data.username}/?__a=1`
+        // })
+        const profile = {
+            username: data.username,
+            url: 'https://scontent-lax3-2.cdninstagram.com/v/t51.2885-19/281002256_565595408512573_1400061443464009582_n.jpg?stp=dst-jpg_s150x150&_nc_ht=scontent-lax3-2.cdninstagram.com&_nc_cat=101&_nc_ohc=uo2V7ZyWZjoAX_6J-02&edm=ABfd0MgBAAAA&ccb=7-4&oh=00_AT9CsWtBoTwNW61333tl5XGQ5kKckahz2FxQMwsV8-1hSQ&oe=6288AF02&_nc_sid=7bff83'
+        };
+        return profile;
+    }
+    catch (err) {
+        console.log(err.message);
+    }
+});
 //------- routes (facebook)
 app.get('/user', (req, res) => {
     res.status(200).send(user);
@@ -91,17 +128,36 @@ app.post('/authorization', (req, res) => __awaiter(void 0, void 0, void 0, funct
         id
     };
     // get user's profile & page info
-    const result = yield Promise.all([getProfile(token), getPageInfo(token)]);
+    const result = yield Promise.all([getFacebookProfile(token), getFacebookPages(token)]);
     const profile = result[0];
-    const pageInfo = result[1];
-    // set user data
-    if (req.body.type === 'facebook') {
-        user.facebook = Object.assign(Object.assign({}, user.facebook), { auth, profile, pages: pageInfo });
+    const facebookPages = result[1];
+    let instagramPages = [];
+    // iterate through page info and get instagram id for each. store each id
+    for (let i = 0; i < facebookPages.length; i++) {
+        const id = facebookPages[i].auth.id;
+        const token = facebookPages[i].auth.token;
+        const instagramId = yield getInstagramId(id, token);
+        const instagramProfile = yield getInstagramProfile(instagramId, token);
+        instagramPages.push({
+            auth: { id: instagramId },
+            profile: instagramProfile
+        });
     }
-    if (req.body.type === 'instagram') {
-        user.instagram = Object.assign(Object.assign({}, user.instagram), { auth, profile, pages: pageInfo });
-    }
-    res.status(201).send({ profile, pageInfo });
+    user.facebook = Object.assign(Object.assign({}, user.facebook), { auth, profile, pages: facebookPages });
+    user.instagram = Object.assign(Object.assign({}, user.instagram), { pages: instagramPages });
+    const fbPages = facebookPages.map((page) => {
+        return {
+            id: page.auth.id,
+            profile: page.profile
+        };
+    });
+    const igPages = instagramPages.map((page) => {
+        return {
+            id: page.auth.id,
+            profile: page.profile
+        };
+    });
+    res.status(201).send({ profile, facebookPages: fbPages, instagramPages: igPages });
 }));
 // post image to user's facebook page
 const postImage = (pageId, imageUrl, pageToken) => __awaiter(void 0, void 0, void 0, function* () {
@@ -110,7 +166,6 @@ const postImage = (pageId, imageUrl, pageToken) => __awaiter(void 0, void 0, voi
         method: 'post',
         url: postUrl
     });
-    console.log('response from FB post image req', data);
     return data.post_id;
 });
 // update post with caption
@@ -121,16 +176,14 @@ const updatePost = (postId, message, pageToken) => __awaiter(void 0, void 0, voi
         method: 'post',
         url: updateUrl
     });
-    console.log('response from FB update post req', data);
     return data;
 });
 // post to user's facebook page
 app.post('/facebook/publish', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('post to facebook', req.body);
-    const pageId = user.facebook.pages[0].auth.id;
-    const pageToken = user.facebook.pages[0].auth.token;
     const message = req.body.message;
     const imageUrl = req.body.imageUrl;
+    const pageId = req.body.pageId;
+    const pageToken = user.facebook.pages[0].auth.token; // TODO get token for that page
     try {
         // post image
         const postId = yield postImage(pageId, imageUrl, pageToken);
@@ -145,18 +198,18 @@ app.post('/facebook/publish', (req, res) => __awaiter(void 0, void 0, void 0, fu
 // post to instagram page
 app.post('/instagram/publish', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // TODO
-    const accountId = user.instagram.auth.userID;
-    const userId = user.instagram.pages.pageID;
-    const accessToken = user.instagram.pages.pageToken;
-    const caption = req.body.caption;
+    const igUserId = req.body.userId;
     const imageUrl = req.body.imageUrl;
+    const caption = req.body.caption;
+    const accessToken = user.facebook.pages[0].auth.token; // TODO get token for that page
     try {
-        // create IG media container (for images)
-        const creationId = yield axios_1.default.post(`https://graph.facebook.com/v13.0/${accountId}/media?image_url=${imageUrl}&caption=${caption}&access_token=${accessToken}`);
+        // create IG media container (for single images)
+        const res = yield axios_1.default.post(`https://graph.facebook.com/v13.0/${igUserId}/media?image_url=${imageUrl}&caption=${caption}&access_token=${accessToken}`);
         // &location_id={location-id}
         // &user_tags={user-tags}
+        const creationId = res.data.id;
         // publish media container
-        yield axios_1.default.post(`https://graph.facebook.com/v13.0/${userId}/media_publish?creation_id=${creationId}&access_token=${accessToken}`);
+        yield axios_1.default.post(`https://graph.facebook.com/v13.0/${igUserId}/media_publish?creation_id=${creationId}&access_token=${accessToken}`);
     }
     catch (err) {
         console.log(err.response);
