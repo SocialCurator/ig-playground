@@ -76,7 +76,7 @@ const getFacebookPages = (token) => __awaiter(void 0, void 0, void 0, function* 
         return pages;
     }
     catch (err) {
-        console.log(err.message);
+        console.log(err.response);
     }
 });
 const getInstagramId = (id, token) => __awaiter(void 0, void 0, void 0, function* () {
@@ -99,15 +99,9 @@ const getInstagramProfile = (id, token) => __awaiter(void 0, void 0, void 0, fun
             method: 'get',
             url
         });
-        // TODO - find better way to get user's ig profile picture
-        const x = yield (0, axios_1.default)({
-            method: 'get',
-            url: `https://www.instagram.com/${data.username}/channel/?__a=1`
-        });
-        console.log(x.data);
         const profile = {
             username: data.username,
-            url
+            url: data.profile_picture_url
         };
         return profile;
     }

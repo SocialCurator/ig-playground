@@ -98,7 +98,7 @@ const getFacebookPages = async (token: string) => {
         return pages
     }
     catch (err) {
-        console.log(err.message)
+        console.log(err.response)
     }
 }
 
@@ -130,19 +130,9 @@ const getInstagramProfile = async(id: string, token: string) => {
             url
         })
 
-        // TODO - find better way to get user's ig profile picture
-        // const x  = await axios({
-        //     method: 'get',
-        //     url: `https://www.instagram.com/${data.username}/channel/?__a=1`
-        // })
-
-        // console.log(x.data)
-
-        const profilePictureUrl = 'https://scontent-lax3-2.cdninstagram.com/v/t51.2885-19/281002256_565595408512573_1400061443464009582_n.jpg?stp=dst-jpg_s150x150&_nc_ht=scontent-lax3-2.cdninstagram.com&_nc_cat=101&_nc_ohc=uo2V7ZyWZjoAX_6J-02&edm=ABfd0MgBAAAA&ccb=7-4&oh=00_AT9CsWtBoTwNW61333tl5XGQ5kKckahz2FxQMwsV8-1hSQ&oe=6288AF02&_nc_sid=7bff83'
-
         const profile = {
             username: data.username,
-            url: profilePictureUrl
+            url: data.profile_picture_url
         }
 
         return profile
