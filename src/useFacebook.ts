@@ -49,9 +49,8 @@ const useFacebook = () => {
         setLoggedIn(true)
          
         try { 
-          axios.post('/authorization', {
-            authResponse,
-          }).then((res)=>{
+
+          axios.post('/facebook/authorization', { authResponse }).then((res)=>{
             console.log("User's data has been stored in the server.")
             setUser({
               ...user,
@@ -146,11 +145,14 @@ const useFacebook = () => {
           const authResponse = res.authResponse
 
           try { 
-            axios.post('/authorize', {
+            axios.post('/facebook/authorization', {
               authResponse
             }).then((res)=>{
-              console.log(res.data)
-              setUser({...user, facebook: res.data} )
+              setUser({
+                ...user,
+                facebook: {...user.facebook, profile: res.data.profile, pages: res.data.facebookPages},
+                instagram: {...user.instagram, pages: res.data.instagramPages}
+              })
             })
           }
           catch (err) {
