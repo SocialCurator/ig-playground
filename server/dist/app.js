@@ -100,13 +100,14 @@ const getInstagramProfile = (id, token) => __awaiter(void 0, void 0, void 0, fun
             url
         });
         // TODO - find better way to get user's ig profile picture
-        // const x  = await axios({
-        //     method: 'get',
-        //     url: `https://www.instagram.com/${data.username}/?__a=1`
-        // })
+        const x = yield (0, axios_1.default)({
+            method: 'get',
+            url: `https://www.instagram.com/${data.username}/channel/?__a=1`
+        });
+        console.log(x.data);
         const profile = {
             username: data.username,
-            url: 'https://scontent-lax3-2.cdninstagram.com/v/t51.2885-19/281002256_565595408512573_1400061443464009582_n.jpg?stp=dst-jpg_s150x150&_nc_ht=scontent-lax3-2.cdninstagram.com&_nc_cat=101&_nc_ohc=uo2V7ZyWZjoAX_6J-02&edm=ABfd0MgBAAAA&ccb=7-4&oh=00_AT9CsWtBoTwNW61333tl5XGQ5kKckahz2FxQMwsV8-1hSQ&oe=6288AF02&_nc_sid=7bff83'
+            url
         };
         return profile;
     }
@@ -119,7 +120,7 @@ app.get('/user', (req, res) => {
     res.status(200).send(user);
 });
 // store token after login is complete
-app.post('/authorization', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+app.post('/facebook/authorization', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const authResponse = req.body.authResponse;
     const token = authResponse.accessToken;
     const id = authResponse.userID;
@@ -197,7 +198,6 @@ app.post('/facebook/publish', (req, res) => __awaiter(void 0, void 0, void 0, fu
 }));
 // post to instagram page
 app.post('/instagram/publish', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    // TODO
     const igUserId = req.body.userId;
     const imageUrl = req.body.imageUrl;
     const caption = req.body.caption;

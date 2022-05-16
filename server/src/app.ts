@@ -133,12 +133,16 @@ const getInstagramProfile = async(id: string, token: string) => {
         // TODO - find better way to get user's ig profile picture
         // const x  = await axios({
         //     method: 'get',
-        //     url: `https://www.instagram.com/${data.username}/?__a=1`
+        //     url: `https://www.instagram.com/${data.username}/channel/?__a=1`
         // })
+
+        // console.log(x.data)
+
+        const profilePictureUrl = 'https://scontent-lax3-2.cdninstagram.com/v/t51.2885-19/281002256_565595408512573_1400061443464009582_n.jpg?stp=dst-jpg_s150x150&_nc_ht=scontent-lax3-2.cdninstagram.com&_nc_cat=101&_nc_ohc=uo2V7ZyWZjoAX_6J-02&edm=ABfd0MgBAAAA&ccb=7-4&oh=00_AT9CsWtBoTwNW61333tl5XGQ5kKckahz2FxQMwsV8-1hSQ&oe=6288AF02&_nc_sid=7bff83'
 
         const profile = {
             username: data.username,
-            url: 'https://scontent-lax3-2.cdninstagram.com/v/t51.2885-19/281002256_565595408512573_1400061443464009582_n.jpg?stp=dst-jpg_s150x150&_nc_ht=scontent-lax3-2.cdninstagram.com&_nc_cat=101&_nc_ohc=uo2V7ZyWZjoAX_6J-02&edm=ABfd0MgBAAAA&ccb=7-4&oh=00_AT9CsWtBoTwNW61333tl5XGQ5kKckahz2FxQMwsV8-1hSQ&oe=6288AF02&_nc_sid=7bff83'
+            url: profilePictureUrl
         }
 
         return profile
@@ -155,7 +159,7 @@ app.get('/user', (req, res) => {
 })
 
 // store token after login is complete
-app.post('/authorization', async (req, res) => {
+app.post('/facebook/authorization', async (req, res) => {
     const authResponse = req.body.authResponse
     const token = authResponse.accessToken
     const id = authResponse.userID
@@ -261,7 +265,6 @@ app.post('/facebook/publish', async (req, res) => {
 // post to instagram page
 app.post('/instagram/publish', async (req, res) => {
 
-    // TODO
     const igUserId = req.body.userId
     const imageUrl = req.body.imageUrl
     const caption = req.body.caption
