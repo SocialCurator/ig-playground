@@ -175,6 +175,8 @@ const updatePost = (postId, message, pageToken) => __awaiter(void 0, void 0, voi
 });
 // post to user's facebook page
 app.post('/facebook/publish', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // TODO
+    // https://graph.facebook.com/%7Bpage-id%7D/photos?url={image-url}&message=your
     const message = req.body.message;
     const imageUrl = req.body.imageUrl;
     const pageId = req.body.pageId;

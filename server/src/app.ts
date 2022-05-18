@@ -230,6 +230,8 @@ const updatePost = async (postId, message, pageToken) => {
 
 // post to user's facebook page
 app.post('/facebook/publish', async (req, res) => {
+    // TODO
+    // try https://graph.facebook.com/%7Bpage-id%7D/photos?url={image-url}&message=your
 
     const message = req.body.message
     const imageUrl = req.body.imageUrl
