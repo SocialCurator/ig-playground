@@ -29,13 +29,12 @@ const useFacebook = () => {
     return new Promise((resolve) => {
         // wait for facebook sdk to initialize before starting the react app
         window.fbAsyncInit = () => {
-            window.FB.init({
+            FB.init({
                 appId: process.env.REACT_APP_FACEBOOK_APP_ID,
                 cookie: true,
                 xfbml: true,
-                version: 'v8.0',
+                version: 'v13.0',
             })
-
             setIsInitialized(true)
         }
     })
